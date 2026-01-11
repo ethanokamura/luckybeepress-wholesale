@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   getDocs,
@@ -44,6 +44,31 @@ const SORT_OPTIONS: SortOption[] = [
 ];
 
 export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6 sm:mb-8">
+            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-64 bg-muted animate-pulse rounded mt-2" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+            {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
+              <div
+                key={i}
+                className="aspect-square bg-muted animate-pulse rounded-lg"
+              />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <ProductsContent />
+    </Suspense>
+  );
+}
+
+function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialCategory = searchParams.get("category") || "All";

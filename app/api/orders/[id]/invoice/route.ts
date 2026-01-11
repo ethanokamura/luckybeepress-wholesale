@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import React from "react";
-import { renderToBuffer } from "@react-pdf/renderer";
+import { renderToBuffer, DocumentProps } from "@react-pdf/renderer";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { InvoiceTemplate } from "@/components/pdf/InvoiceTemplate";
@@ -44,11 +44,14 @@ export async function GET(
 
     // Generate the PDF
     const pdfBuffer = await renderToBuffer(
-      React.createElement(InvoiceTemplate, { order, orderDate })
+      React.createElement(InvoiceTemplate, {
+        order,
+        orderDate,
+      }) as React.ReactElement<DocumentProps>
     );
 
     // Return the PDF as a downloadable file
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="Invoice-${order.orderNumber}.pdf"`,
@@ -62,4 +65,3 @@ export async function GET(
     );
   }
 }
-
