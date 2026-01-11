@@ -8,6 +8,7 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/types";
+import Image from "next/image";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -92,7 +93,12 @@ export default function SignupPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-4xl">🐝</span>
+              <Image
+                src="/logo.svg"
+                alt="Lucky Bee Press"
+                width={64}
+                height={64}
+              />
             </Link>
             <h1 className="text-2xl font-bold mt-4">Apply for Wholesale</h1>
             <p className="text-muted-foreground mt-1">

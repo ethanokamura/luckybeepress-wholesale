@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ReactNode } from "react";
@@ -41,14 +42,29 @@ export function AuthGuard({
       router.push("/");
       return;
     }
-  }, [firebaseUser, isLoading, isApproved, isAdmin, requireAuth, requireApproval, requireAdmin, router]);
+  }, [
+    firebaseUser,
+    isLoading,
+    isApproved,
+    isAdmin,
+    requireAuth,
+    requireApproval,
+    requireAdmin,
+    router,
+  ]);
 
   // Show loading state until mounted (prevents hydration mismatch)
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="text-4xl animate-bounce">🐝</div>
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4 animate-bounce"
+          />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -69,4 +85,3 @@ export function AuthGuard({
 
   return <>{children}</>;
 }
-

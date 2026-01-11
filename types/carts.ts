@@ -5,6 +5,7 @@ export interface CartItem {
   productId: string;
   variantId: string | null;
   name: string;
+  sku: string | null;
   image: string | null;
   price: number; // snapshot at time of adding
   quantity: number;

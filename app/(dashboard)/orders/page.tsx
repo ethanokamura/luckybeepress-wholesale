@@ -9,6 +9,7 @@ import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import type { Order } from "@/types";
+import Image from "next/image";
 
 export default function OrdersPage() {
   const { firebaseUser } = useAuth();
@@ -43,7 +44,7 @@ export default function OrdersPage() {
   if (loading) {
     return (
       <AuthGuard requireAuth requireApproval>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="h-8 bg-muted animate-pulse rounded w-32 mb-8" />
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -57,7 +58,7 @@ export default function OrdersPage() {
 
   return (
     <AuthGuard requireAuth requireApproval>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-foreground">Your Orders</h1>
           <Link href="/products">
@@ -67,7 +68,13 @@ export default function OrdersPage() {
 
         {orders.length === 0 ? (
           <div className="text-center py-16">
-            <span className="text-4xl mb-4 block">🐝</span>
+            <Image
+              src="/logo.svg"
+              alt="Lucky Bee Press"
+              width={64}
+              height={64}
+              className="mx-auto mb-4"
+            />
             <h2 className="text-xl font-medium mb-2">No orders yet</h2>
             <p className="text-muted-foreground mb-6">
               You haven&apos;t placed any orders yet. Start shopping!

@@ -10,6 +10,9 @@ import { CartItemRow } from "@/components/shared/CartItemRow";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import type { Cart, CartItem } from "@/types";
+import Image from "next/image";
+
+const MINIMUM_ORDER_AMOUNT = 15000; // $150.00 in cents
 
 export default function CartPage() {
   const { firebaseUser } = useAuth();
@@ -74,7 +77,7 @@ export default function CartPage() {
   if (loading) {
     return (
       <AuthGuard requireAuth requireApproval>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="h-8 bg-muted animate-pulse rounded w-32 mb-8" />
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -90,12 +93,18 @@ export default function CartPage() {
 
   return (
     <AuthGuard requireAuth requireApproval>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-foreground mb-8">Your Cart</h1>
 
         {isEmpty ? (
           <div className="text-center py-16">
-            <span className="text-4xl mb-4 block">🐝</span>
+            <Image
+              src="/logo.svg"
+              alt="Lucky Bee Press"
+              width={64}
+              height={64}
+              className="mx-auto mb-4"
+            />
             <h2 className="text-xl font-medium mb-2">Your cart is empty</h2>
             <p className="text-muted-foreground mb-6">
               Browse our collection and add some cards to your cart.
@@ -152,8 +161,24 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <Link href="/checkout" className="block mt-6">
-                  <Button className="w-full" size="lg">
+                {cart.subtotal < MINIMUM_ORDER_AMOUNT && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      Minimum order amount is {formatPrice(MINIMUM_ORDER_AMOUNT)}. 
+                      Add {formatPrice(MINIMUM_ORDER_AMOUNT - cart.subtotal)} more to checkout.
+                    </p>
+                  </div>
+                )}
+
+                <Link 
+                  href="/checkout" 
+                  className={`block mt-6 ${cart.subtotal < MINIMUM_ORDER_AMOUNT ? 'pointer-events-none' : ''}`}
+                >
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    disabled={cart.subtotal < MINIMUM_ORDER_AMOUNT}
+                  >
                     Proceed to Checkout
                   </Button>
                 </Link>

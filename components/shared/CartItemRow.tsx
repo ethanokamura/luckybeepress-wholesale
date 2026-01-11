@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/firebase-helpers";
 import type { CartItem } from "@/types";
+import { Minus, Plus } from "lucide-react";
 
 interface CartItemRowProps {
   item: CartItem;
@@ -43,7 +44,12 @@ export function CartItemRow({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-2xl">
-            🐝
+            <Image
+              src="/logo.svg"
+              alt="Lucky Bee Press"
+              fill
+              className="object-cover"
+            />
           </div>
         )}
       </div>
@@ -63,17 +69,7 @@ export function CartItemRow({
             onClick={handleDecrease}
             disabled={disabled || item.quantity <= minQuantity}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M5 12h14" />
-            </svg>
+            <Minus width={14} height={14} />
           </Button>
           <span className="w-12 text-center font-medium">{item.quantity}</span>
           <Button
@@ -82,17 +78,7 @@ export function CartItemRow({
             onClick={handleIncrease}
             disabled={disabled}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M5 12h14M12 5v14" />
-            </svg>
+            <Plus width={14} height={14} />
           </Button>
         </div>
       </div>
@@ -103,7 +89,7 @@ export function CartItemRow({
           {formatPrice(item.price * item.quantity)}
         </span>
         <Button
-          variant="ghost"
+          variant="destructive"
           size="sm"
           onClick={onRemove}
           disabled={disabled}

@@ -7,6 +7,7 @@ import { docs, toCents, toDollars, generateSlug } from "@/lib/firebase-helpers";
 import { Button } from "@/components/ui/button";
 import { BOX_SET_CATEGORIES, WHOLESALE_PRICING } from "@/types/products";
 import type { Product, ProductStatus } from "@/types";
+import Image from "next/image";
 
 const categories = [
   "Birthday",
@@ -220,7 +221,13 @@ export default function EditProductPage() {
   if (!product) {
     return (
       <div className="text-center py-16">
-        <span className="text-4xl mb-4 block">🐝</span>
+        <Image
+          src="/logo.svg"
+          alt="Lucky Bee Press"
+          width={64}
+          height={64}
+          className="mx-auto mb-4"
+        />
         <h1 className="text-2xl font-bold mb-2">Product Not Found</h1>
         <Button onClick={() => router.push("/admin/products")}>
           Back to Products

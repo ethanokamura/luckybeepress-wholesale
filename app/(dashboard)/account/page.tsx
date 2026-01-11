@@ -90,7 +90,11 @@ export default function AccountPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold">Profile Information</h2>
             {!editing && (
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+              >
                 Edit
               </Button>
             )}
@@ -166,45 +170,7 @@ export default function AccountPage() {
             </div>
           )}
         </div>
-
-        {/* Quick Links */}
-        {isApproved && (
-          <div className="bg-card border rounded-lg p-6">
-            <h2 className="text-lg font-bold mb-4">Quick Links</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <a
-                href="/orders"
-                className="p-4 border rounded-lg hover:border-primary hover:bg-muted/50 transition-all"
-              >
-                <span className="text-2xl mb-2 block">📦</span>
-                <span className="font-medium">Order History</span>
-              </a>
-              <a
-                href="/products"
-                className="p-4 border rounded-lg hover:border-primary hover:bg-muted/50 transition-all"
-              >
-                <span className="text-2xl mb-2 block">🏷️</span>
-                <span className="font-medium">Browse Products</span>
-              </a>
-              <a
-                href="/cart"
-                className="p-4 border rounded-lg hover:border-primary hover:bg-muted/50 transition-all"
-              >
-                <span className="text-2xl mb-2 block">🛒</span>
-                <span className="font-medium">Your Cart</span>
-              </a>
-              <a
-                href="/contact"
-                className="p-4 border rounded-lg hover:border-primary hover:bg-muted/50 transition-all"
-              >
-                <span className="text-2xl mb-2 block">✉️</span>
-                <span className="font-medium">Contact Us</span>
-              </a>
-            </div>
-          </div>
-        )}
       </div>
     </AuthGuard>
   );
 }
-

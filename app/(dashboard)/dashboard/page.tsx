@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 // Customer dashboard redirects to appropriate page based on status
 export default function DashboardPage() {
@@ -23,8 +24,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="text-4xl animate-bounce">🐝</div>
+      <Image
+        src="/logo.svg"
+        alt="Lucky Bee Press"
+        width={64}
+        height={64}
+        className="animate-bounce"
+      />
     </div>
   );
 }
-

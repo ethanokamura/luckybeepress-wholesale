@@ -11,9 +11,18 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { collections, docs, toDate } from "@/lib/firebase-helpers";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/types";
+import Image from "next/image";
 
 type AccountStatus = "pending" | "active" | "suspended" | "all";
 
@@ -142,23 +151,24 @@ export default function AdminCustomersPage() {
 
       {customers.length > 0 ? (
         <div className="bg-card border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left p-4 font-medium">Customer</th>
-                <th className="text-left p-4 font-medium">Email</th>
-                <th className="text-left p-4 font-medium">Phone</th>
-                <th className="text-left p-4 font-medium">Joined</th>
-                <th className="text-left p-4 font-medium">Status</th>
-                <th className="text-right p-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="p-4">Customer</TableHead>
+                <TableHead className="p-4">Email</TableHead>
+                <TableHead className="p-4">Phone</TableHead>
+                <TableHead className="p-4">Joined</TableHead>
+                <TableHead className="p-4">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {customers.map((customer) => {
                 const createdAt = toDate(customer.createdAt);
+
                 return (
-                  <tr key={customer.id} className="hover:bg-muted/30">
-                    <td className="p-4">
+                  <TableRow key={customer.id}>
+                    <TableCell className="p-4 font-medium">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <span className="text-primary font-medium">
@@ -175,15 +185,15 @@ export default function AdminCustomersPage() {
                           </p>
                         </div>
                       </div>
-                    </td>
-                    <td className="p-4 text-sm">{customer.email}</td>
-                    <td className="p-4 text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-4">{customer.email}</TableCell>
+                    <TableCell className="p-4">
                       {customer.phone || "—"}
-                    </td>
-                    <td className="p-4 text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-4">
                       {createdAt?.toLocaleDateString()}
-                    </td>
-                    <td className="p-4">
+                    </TableCell>
+                    <TableCell className="p-4">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(
                           customer.accountStatus
@@ -191,8 +201,8 @@ export default function AdminCustomersPage() {
                       >
                         {customer.accountStatus}
                       </span>
-                    </td>
-                    <td className="p-4 text-right">
+                    </TableCell>
+                    <TableCell className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {customer.accountStatus === "pending" && (
                           <Button
@@ -231,16 +241,22 @@ export default function AdminCustomersPage() {
                           View
                         </Link>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="bg-card border rounded-lg p-12 text-center">
-          <span className="text-4xl mb-4 block">🐝</span>
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
           <h2 className="text-xl font-medium mb-2">No customers found</h2>
           <p className="text-muted-foreground">
             {statusFilter === "all"

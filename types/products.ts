@@ -2,29 +2,6 @@ import { FirebaseDoc, CreateDoc, UpdateDoc } from "./base_types";
 
 export type ProductStatus = "draft" | "active" | "archived";
 
-export type ProductCategory =
-  | "Birthday"
-  | "Thank You"
-  | "Holiday"
-  | "Christmas"
-  | "Hanukkah"
-  | "Season's Greetings"
-  | "New Year's"
-  | "Valentine's Day"
-  | "Love"
-  | "Sympathy"
-  | "Congratulations"
-  | "Baby"
-  | "Wedding"
-  | "Graduation"
-  | "Mother's Day"
-  | "Father's Day"
-  | "Rosh Hashanah"
-  | "Easter"
-  | "Everyday"
-  | "Blank"
-  | "Other";
-
 export interface Product extends FirebaseDoc {
   // Core fields
   name: string;

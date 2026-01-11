@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { WHOLESALE_PRICING } from "@/types/products";
 import type { Product, Cart, CartItem } from "@/types";
+import { Minus, Plus } from "lucide-react";
 
 type OrderType = "singles" | "box";
 
@@ -107,6 +108,7 @@ export default function ProductDetailPage() {
         productId: product.id,
         variantId: orderType === "box" ? "box" : null,
         name: itemName,
+        sku: product.sku || null,
         image: product.images?.[0] || null,
         price: getPrice(),
         quantity: getQuantity(),
@@ -192,7 +194,13 @@ export default function ProductDetailPage() {
     return (
       <AuthGuard requireAuth requireApproval>
         <div className="text-center py-16">
-          <span className="text-4xl mb-4 block">🐝</span>
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold mb-2">Product Not Found</h1>
           <p className="text-muted-foreground mb-4">
             This product doesn&apos;t exist or has been removed.
@@ -221,18 +229,23 @@ export default function ProductDetailPage() {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted max-w-lg mx-auto">
               {product.images?.[selectedImage] ? (
                 <Image
                   src={product.images[selectedImage]}
                   alt={product.name}
-                  fill
+                  width={1028}
+                  height={1028}
                   className="object-cover"
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-6xl">
-                  🐝
-                </div>
+                <Image
+                  src="/logo.svg"
+                  alt="Lucky Bee Press"
+                  width={1028}
+                  height={1028}
+                  className="object-cover"
+                />
               )}
             </div>
             {product.images && product.images.length > 1 && (
@@ -241,7 +254,7 @@ export default function ProductDetailPage() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`relative w-20 h-20 rounded-md overflow-hidden border-2 ${
+                    className={`w-20 h-20 rounded-md overflow-hidden border-2 ${
                       selectedImage === index
                         ? "border-primary"
                         : "border-transparent"
@@ -271,7 +284,7 @@ export default function ProductDetailPage() {
             {/* Pricing Display */}
             <div className="mb-6">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-primary">
+                <span className="text-2xl font-bold text-foreground">
                   {formatPrice(product.wholesalePrice)}
                 </span>
                 <span className="text-muted-foreground">/card</span>
@@ -358,64 +371,69 @@ export default function ProductDetailPage() {
 
                 {/* Quantity */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {orderType === "box"
-                      ? "Number of Boxes"
-                      : "Number of Cards"}{" "}
-                    (increments of{" "}
+                  <label className="block text-sm mb-2 text-muted-foreground">
+                    *Sold increments of{" "}
                     {orderType === "box"
                       ? WHOLESALE_PRICING.BOX_MIN_QTY
                       : WHOLESALE_PRICING.SINGLE_MIN_QTY}
-                    )
                   </label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (orderType === "box") {
-                          setBoxQty(
-                            Math.max(
-                              WHOLESALE_PRICING.BOX_MIN_QTY,
-                              boxQty - WHOLESALE_PRICING.BOX_MIN_QTY
-                            )
-                          );
-                        } else {
-                          setSingleQty(
-                            Math.max(
-                              WHOLESALE_PRICING.SINGLE_MIN_QTY,
-                              singleQty - WHOLESALE_PRICING.SINGLE_MIN_QTY
-                            )
-                          );
+                  <div className="flex justify-end w-full items-start gap-4  p-4">
+                    <div className="flex flex-col items-end w-32">
+                      <p className="text-4xl font-bold">
+                        {formatPrice(getTotal())}
+                      </p>{" "}
+                      <p className="text-md text-muted-foreground">
+                        (x{getTotalCards()}{" "}
+                        {orderType === "box" ? "boxes" : "cards"})
+                      </p>
+                    </div>
+                    <div className="flex items-center mt-1 gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          if (orderType === "box") {
+                            setBoxQty(boxQty + WHOLESALE_PRICING.BOX_MIN_QTY);
+                          } else {
+                            setSingleQty(
+                              singleQty + WHOLESALE_PRICING.SINGLE_MIN_QTY
+                            );
+                          }
+                        }}
+                      >
+                        <Plus width={14} height={14} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          if (orderType === "box") {
+                            setBoxQty(
+                              Math.max(
+                                WHOLESALE_PRICING.BOX_MIN_QTY,
+                                boxQty - WHOLESALE_PRICING.BOX_MIN_QTY
+                              )
+                            );
+                          } else {
+                            setSingleQty(
+                              Math.max(
+                                WHOLESALE_PRICING.SINGLE_MIN_QTY,
+                                singleQty - WHOLESALE_PRICING.SINGLE_MIN_QTY
+                              )
+                            );
+                          }
+                        }}
+                        disabled={
+                          orderType === "box"
+                            ? boxQty <= WHOLESALE_PRICING.BOX_MIN_QTY
+                            : singleQty <= WHOLESALE_PRICING.SINGLE_MIN_QTY
                         }
-                      }}
-                      disabled={
-                        orderType === "box"
-                          ? boxQty <= WHOLESALE_PRICING.BOX_MIN_QTY
-                          : singleQty <= WHOLESALE_PRICING.SINGLE_MIN_QTY
-                      }
-                    >
-                      -
-                    </Button>
-                    <span className="w-16 text-center font-medium text-lg">
-                      {getQuantity()}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (orderType === "box") {
-                          setBoxQty(boxQty + WHOLESALE_PRICING.BOX_MIN_QTY);
-                        } else {
-                          setSingleQty(
-                            singleQty + WHOLESALE_PRICING.SINGLE_MIN_QTY
-                          );
-                        }
-                      }}
-                    >
-                      +
-                    </Button>
+                      >
+                        <Minus width={14} height={14} />
+                      </Button>
+                    </div>
                   </div>
+
                   {orderType === "box" && (
                     <p className="text-sm text-muted-foreground mt-1">
                       = {getTotalCards()} cards total
@@ -433,14 +451,6 @@ export default function ProductDetailPage() {
                   >
                     {addingToCart ? "Adding..." : "Add to Cart"}
                   </Button>
-                  <div className="text-right">
-                    <span className="text-2xl font-bold">
-                      {formatPrice(getTotal())}
-                    </span>
-                    <p className="text-xs text-muted-foreground">
-                      {getTotalCards()} cards
-                    </p>
-                  </div>
                 </div>
               </div>
             ) : (

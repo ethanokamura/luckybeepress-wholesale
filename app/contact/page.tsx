@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Navbar } from "@/components/shared/Navbar";
+import { SidebarLayout } from "@/components/shared/SidebarLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import type { ContactMessage, ContactType } from "@/types";
+import Image from "next/image";
 
 const contactTypes: { value: ContactType; label: string }[] = [
   { value: "general", label: "General Inquiry" },
@@ -76,12 +77,11 @@ export default function ContactPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <span className="text-6xl mb-6 block">✓</span>
-          <h1 className="text-3xl font-bold mb-4">Message Sent!</h1>
-          <p className="text-muted-foreground mb-8">
+      <SidebarLayout>
+        <div className="max-w-2xl mx-auto py-8 sm:py-16 text-center">
+          <span className="text-5xl sm:text-6xl mb-6 block">✓</span>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4">Message Sent!</h1>
+          <p className="text-muted-foreground mb-8 px-4">
             Thank you for contacting us. We&apos;ll get back to you as soon as
             possible, typically within 1-2 business days.
           </p>
@@ -89,41 +89,45 @@ export default function ContactPage() {
             Send Another Message
           </Button>
         </div>
-      </div>
+      </SidebarLayout>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <span className="text-4xl mb-4 block">🐝</span>
-          <h1 className="text-3xl font-bold">Contact Us</h1>
-          <p className="text-muted-foreground mt-2">
+    <SidebarLayout>
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8 sm:mb-12">
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
+          <h1 className="text-2xl sm:text-3xl font-bold">Contact Us</h1>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Have a question? We&apos;d love to hear from you.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Contact Info */}
-          <div className="space-y-6">
-            <div className="bg-card border rounded-lg p-6">
+          <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
+            <div className="bg-card border rounded-lg p-4 sm:p-6">
               <h3 className="font-bold mb-2">Lucky Bee Press</h3>
               <p className="text-sm text-muted-foreground">
                 Artisan letterpress greeting cards since 2008.
               </p>
             </div>
 
-            <div className="bg-card border rounded-lg p-6">
+            <div className="bg-card border rounded-lg p-4 sm:p-6">
               <h3 className="font-bold mb-2">Response Time</h3>
               <p className="text-sm text-muted-foreground">
                 We typically respond within 1-2 business days.
               </p>
             </div>
 
-            <div className="bg-secondary rounded-lg p-6">
+            <div className="bg-secondary rounded-lg p-4 sm:p-6">
               <h3 className="font-bold mb-2">Wholesale Inquiries</h3>
               <p className="text-sm text-muted-foreground">
                 Interested in carrying Lucky Bee Press products?{" "}
@@ -135,10 +139,10 @@ export default function ContactPage() {
           </div>
 
           {/* Contact Form */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2 order-1 lg:order-2">
             <form
               onSubmit={handleSubmit}
-              className="bg-card border rounded-lg p-6 space-y-4"
+              className="bg-card border rounded-lg p-4 sm:p-6 space-y-4"
             >
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -151,7 +155,7 @@ export default function ContactPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   />
                 </div>
                 <div>
@@ -164,7 +168,7 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   />
                 </div>
               </div>
@@ -179,7 +183,7 @@ export default function ContactPage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   />
                 </div>
                 <div>
@@ -191,7 +195,7 @@ export default function ContactPage() {
                     value={formData.type}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   >
                     {contactTypes.map((type) => (
                       <option key={type.value} value={type.value}>
@@ -214,7 +218,7 @@ export default function ContactPage() {
                     value={formData.orderNumber}
                     onChange={handleChange}
                     placeholder="ORD-2024-XXXXXX"
-                    className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   />
                 </div>
               )}
@@ -229,7 +233,7 @@ export default function ContactPage() {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                 />
               </div>
 
@@ -243,7 +247,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   required
                   rows={5}
-                  className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  className="w-full px-3 sm:px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm sm:text-base"
                 />
               </div>
 
@@ -254,6 +258,6 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
-    </div>
+    </SidebarLayout>
   );
 }

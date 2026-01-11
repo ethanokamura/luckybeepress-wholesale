@@ -30,6 +30,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+admin-sdk.json
+
 scripts/
 
 # env files (can opt-in for committing if needed)

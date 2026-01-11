@@ -10,6 +10,7 @@ import {
   PaymentStatusBadge,
 } from "@/components/shared/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 import type { Order, OrderStatus, PaymentStatus } from "@/types";
 
 const orderStatuses: OrderStatus[] = [
@@ -195,6 +196,28 @@ export default function AdminOrderDetailPage() {
     }
   };
 
+  const handleDownloadInvoice = async () => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}/invoice`);
+      if (!response.ok) {
+        throw new Error("Failed to generate invoice");
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Invoice-${order?.orderNumber || orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      alert("Failed to download invoice. Please try again.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto">
@@ -207,7 +230,13 @@ export default function AdminOrderDetailPage() {
   if (!order) {
     return (
       <div className="text-center py-16">
-        <span className="text-4xl mb-4 block">🐝</span>
+        <Image
+          src="/logo.svg"
+          alt="Lucky Bee Press"
+          width={64}
+          height={64}
+          className="mx-auto mb-4"
+        />
         <h1 className="text-2xl font-bold mb-2">Order Not Found</h1>
         <Button onClick={() => router.push("/admin/orders")}>
           Back to Orders
@@ -240,9 +269,19 @@ export default function AdminOrderDetailPage() {
             })}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <OrderStatusBadge status={order.status} />
-          <PaymentStatusBadge status={order.paymentStatus} />
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex gap-2">
+            <OrderStatusBadge status={order.status} />
+            <PaymentStatusBadge status={order.paymentStatus} />
+          </div>
+          <Button
+            onClick={handleDownloadInvoice}
+            variant="outline"
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Download Invoice
+          </Button>
         </div>
       </div>
 
@@ -267,9 +306,12 @@ export default function AdminOrderDetailPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-lg">
-                        🐝
-                      </div>
+                      <Image
+                        src="/logo.svg"
+                        alt="Lucky Bee Press"
+                        fill
+                        className="object-cover"
+                      />
                     )}
                   </div>
                   <div className="flex-1">

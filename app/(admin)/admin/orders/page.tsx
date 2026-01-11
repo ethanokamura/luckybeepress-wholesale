@@ -9,8 +9,17 @@ import {
   OrderStatusBadge,
   PaymentStatusBadge,
 } from "@/components/shared/OrderStatusBadge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus } from "@/types";
+import Image from "next/image";
 
 const statusFilters: { value: OrderStatus | "all"; label: string }[] = [
   { value: "all", label: "All Orders" },
@@ -89,65 +98,71 @@ export default function AdminOrdersPage() {
 
       {orders.length > 0 ? (
         <div className="bg-card border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left p-4 font-medium">Order</th>
-                <th className="text-left p-4 font-medium">Customer</th>
-                <th className="text-left p-4 font-medium">Date</th>
-                <th className="text-left p-4 font-medium">Total</th>
-                <th className="text-left p-4 font-medium">Status</th>
-                <th className="text-left p-4 font-medium">Payment</th>
-                <th className="text-right p-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="p-4">Order</TableHead>
+                <TableHead className="p-4">Customer</TableHead>
+                <TableHead className="p-4">Date</TableHead>
+                <TableHead className="p-4">Total</TableHead>
+                <TableHead className="p-4">Status</TableHead>
+                <TableHead className="p-4">Payment</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {orders.map((order) => {
                 const createdAt = toDate(order.createdAt);
                 return (
-                  <tr key={order.id} className="hover:bg-muted/30">
-                    <td className="p-4">
+                  <TableRow key={order.id} className="hover:bg-muted/30">
+                    <TableCell className="p-4">
                       <p className="font-medium">{order.orderNumber}</p>
                       <p className="text-xs text-muted-foreground">
                         {order.items.length} item
                         {order.items.length !== 1 ? "s" : ""}
                       </p>
-                    </td>
-                    <td className="p-4">
+                    </TableCell>
+                    <TableCell className="p-4">
                       <p className="text-sm">{order.userEmail}</p>
-                    </td>
-                    <td className="p-4 text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-4 text-sm text-muted-foreground">
                       {createdAt?.toLocaleDateString()}
-                    </td>
-                    <td className="p-4 font-medium">
+                    </TableCell>
+                    <TableCell className="p-4 font-medium">
                       {formatPrice(order.total)}
-                    </td>
-                    <td className="p-4">
+                    </TableCell>
+                    <TableCell className="p-4">
                       <OrderStatusBadge status={order.status} size="sm" />
-                    </td>
-                    <td className="p-4">
+                    </TableCell>
+                    <TableCell className="p-4">
                       <PaymentStatusBadge
                         status={order.paymentStatus}
                         size="sm"
                       />
-                    </td>
-                    <td className="p-4 text-right">
+                    </TableCell>
+                    <TableCell className="p-4 text-right">
                       <Link
                         href={`/admin/orders/${order.id}`}
                         className="text-sm text-primary hover:underline"
                       >
                         View
                       </Link>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="bg-card border rounded-lg p-12 text-center">
-          <span className="text-4xl mb-4 block">🐝</span>
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
           <h2 className="text-xl font-medium mb-2">No orders found</h2>
           <p className="text-muted-foreground">
             {statusFilter === "all"

@@ -2,20 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { formatPrice, generateOrderNumber } from "@/lib/firebase-helpers";
+import { formatPrice } from "@/lib/firebase-helpers";
 import { AuthGuard } from "@/components/shared/AuthGuard";
 import { AddressForm } from "@/components/shared/AddressForm";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import type { Cart, OrderAddress, OrderItem } from "@/types";
+import type { Cart, OrderAddress } from "@/types";
+import Image from "next/image";
+import { Lock, CreditCard } from "lucide-react";
+
+const MINIMUM_ORDER_AMOUNT = 15000; // $150.00 in cents
 
 export default function CheckoutPage() {
   const { firebaseUser } = useAuth();
@@ -74,69 +72,54 @@ export default function CheckoutPage() {
     setStep("review");
   };
 
-  const handlePlaceOrder = async () => {
+  const handleStripeCheckout = async () => {
     if (!firebaseUser || !cart || !shippingAddress || !billingAddress) return;
+
+    // Final check for minimum order amount
+    if (cart.subtotal < MINIMUM_ORDER_AMOUNT) {
+      alert(
+        `Minimum order amount is ${formatPrice(
+          MINIMUM_ORDER_AMOUNT
+        )}. Please add more items to your cart.`
+      );
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const orderNumber = generateOrderNumber();
-      const orderId = `${firebaseUser.uid}-${Date.now()}`;
+      // Create checkout session
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: cart.items,
+          shippingAddress,
+          billingAddress,
+          userId: firebaseUser.uid,
+          userEmail: firebaseUser.email || "",
+          notes: notes || "",
+          subtotal: cart.subtotal,
+          discount: cart.discount,
+        }),
+      });
 
-      const orderItems: OrderItem[] = cart.items.map((item) => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        name: item.name,
-        sku: null,
-        image: item.image,
-        price: item.price,
-        quantity: item.quantity,
-        total: item.price * item.quantity,
-      }));
+      const data = await response.json();
 
-      // Calculate totals (simplified - no tax/shipping for now)
-      const subtotal = cart.subtotal;
-      const shippingCost = 0; // Free shipping or calculate based on weight
-      const tax = 0; // Calculate based on address
-      const discount = cart.discount;
-      const total = subtotal + shippingCost + tax - discount;
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout session");
+      }
 
-      const order = {
-        orderNumber,
-        userId: firebaseUser.uid,
-        userEmail: firebaseUser.email || "",
-        status: "pending",
-        paymentStatus: "pending",
-        items: orderItems,
-        shippingAddress,
-        billingAddress,
-        subtotal,
-        shippingCost,
-        tax,
-        discount,
-        total,
-        paymentMethod: "card",
-        paymentIntentId: null,
-        shipping: null,
-        notes: notes || null,
-        adminNotes: null,
-        paidAt: null,
-        cancelledAt: null,
-        refundedAt: null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      // Create order
-      await setDoc(doc(db, "orders", orderId), order);
-
-      // Clear cart
-      await deleteDoc(doc(db, "carts", firebaseUser.uid));
-
-      // Redirect to order confirmation
-      router.push(`/orders/${orderId}?new=true`);
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error) {
-      console.error("Error placing order:", error);
-      alert("There was an error placing your order. Please try again.");
+      console.error("Error creating checkout session:", error);
+      alert("There was an error processing your payment. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +128,7 @@ export default function CheckoutPage() {
   if (loading) {
     return (
       <AuthGuard requireAuth requireApproval>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="h-8 bg-muted animate-pulse rounded w-32 mb-8" />
           <div className="h-64 bg-muted animate-pulse rounded-lg" />
         </div>
@@ -156,8 +139,14 @@ export default function CheckoutPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <AuthGuard requireAuth requireApproval>
-        <div className="max-w-4xl mx-auto text-center py-16">
-          <span className="text-4xl mb-4 block">🐝</span>
+        <div className="max-w-7xl mx-auto text-center py-16">
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
           <p className="text-muted-foreground mb-6">
             Add some products to your cart before checking out.
@@ -170,9 +159,35 @@ export default function CheckoutPage() {
     );
   }
 
+  // Redirect to cart if subtotal is below minimum
+  if (cart.subtotal < MINIMUM_ORDER_AMOUNT) {
+    return (
+      <AuthGuard requireAuth requireApproval>
+        <div className="max-w-7xl mx-auto text-center py-16">
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
+          <h1 className="text-2xl font-bold mb-2">Minimum Order Not Met</h1>
+          <p className="text-muted-foreground mb-6">
+            The minimum order amount is {formatPrice(MINIMUM_ORDER_AMOUNT)}.
+            Your current cart total is {formatPrice(cart.subtotal)}.
+            <br />
+            Please add {formatPrice(MINIMUM_ORDER_AMOUNT - cart.subtotal)} more
+            to proceed.
+          </p>
+          <Button onClick={() => router.push("/cart")}>Return to Cart</Button>
+        </div>
+      </AuthGuard>
+    );
+  }
+
   return (
     <AuthGuard requireAuth requireApproval>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-foreground mb-8">Checkout</h1>
 
         {/* Progress Steps */}
@@ -306,19 +321,26 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Place Order */}
+                {/* Proceed to Payment */}
                 <Button
                   size="lg"
-                  className="w-full"
-                  onClick={handlePlaceOrder}
+                  className="w-full gap-2"
+                  onClick={handleStripeCheckout}
                   disabled={submitting}
                 >
-                  {submitting ? "Placing Order..." : "Place Order"}
+                  {submitting ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      <CreditCard className="w-5 h-5" />
+                      Proceed to Payment
+                    </>
+                  )}
                 </Button>
-                <p className="text-xs text-center text-muted-foreground mt-2">
-                  By placing your order, you agree to our terms and conditions.
-                  Payment will be arranged separately.
-                </p>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-2">
+                  <Lock className="w-3 h-3" />
+                  <span>Secure payment powered by Stripe</span>
+                </div>
               </div>
             )}
           </div>
@@ -349,6 +371,14 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
                   <span>{formatPrice(cart.subtotal - cart.discount)}</span>
+                </div>
+              </div>
+
+              {/* Stripe Badge */}
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Lock className="w-3 h-3" />
+                  <span>Secure checkout with Stripe</span>
                 </div>
               </div>
             </div>

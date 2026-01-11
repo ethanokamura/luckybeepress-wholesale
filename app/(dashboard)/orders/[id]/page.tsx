@@ -64,7 +64,13 @@ export default function OrderDetailPage() {
     return (
       <AuthGuard requireAuth requireApproval>
         <div className="max-w-4xl mx-auto text-center py-16">
-          <span className="text-4xl mb-4 block">🐝</span>
+          <Image
+            src="/logo.svg"
+            alt="Lucky Bee Press"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold mb-2">Order Not Found</h1>
           <p className="text-muted-foreground mb-6">
             This order doesn&apos;t exist or you don&apos;t have permission to
@@ -150,9 +156,12 @@ export default function OrderDetailPage() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-xl">
-                          🐝
-                        </div>
+                        <Image
+                          src="/logo.svg"
+                          alt="Lucky Bee Press"
+                          fill
+                          className="object-cover"
+                        />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

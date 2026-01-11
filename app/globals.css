@@ -60,7 +60,7 @@
   --popover: #FFFFFF;
   --popover-foreground: #2D2A26;
   /* Primary: Deep honey amber */
-  --primary: #F2A900;
+  --primary: #FFC72C;
   --primary-foreground: #1A1815;
   /* Secondary: Soft honeycomb */
   --secondary: #FFF4D6;
@@ -68,7 +68,7 @@
   --muted: #F5EFE6;
   --muted-foreground: #736B5E;
   /* Accent: Bright honey gold */
-  --accent: #FFC72C;
+  --accent: #F2A900;
   --accent-foreground: #1A1815;
   --destructive: #DC2626;
   --border: #E8E0D5;
@@ -83,12 +83,12 @@
   /* Sidebar */
   --sidebar: #FFF9ED;
   --sidebar-foreground: #2D2A26;
-  --sidebar-primary: #F2A900;
+  --sidebar-primary: #FFC72C;
   --sidebar-primary-foreground: #1A1815;
   --sidebar-accent: #FFF4D6;
   --sidebar-accent-foreground: #5C4A1F;
   --sidebar-border: #E8E0D5;
-  --sidebar-ring: #F2A900;
+  --sidebar-ring: #FFC72C;
 }
 
 .dark {
@@ -139,7 +139,7 @@
     --s: 14px; /* control the size*/
     --c1: #FFFBF5;
     --c2: #FFF4D6;
-    
+
     --c:#0000,var(--c1) .5deg 119.5deg,#0000 120deg;
     --g1:conic-gradient(from  60deg at 56.25% calc(425%/6),var(--c));
     --g2:conic-gradient(from 180deg at 43.75% calc(425%/6),var(--c));
@@ -157,7 +157,7 @@
   --s: 14px; /* control the size*/
   --c1: #FFFBF5;
   --c2: #FFF4D6;
-  
+
   --c:#0000,var(--c1) .5deg 119.5deg,#0000 120deg;
   --g1:conic-gradient(from  60deg at 56.25% calc(425%/6),var(--c));
   --g2:conic-gradient(from 180deg at 43.75% calc(425%/6),var(--c));

@@ -16,6 +16,7 @@ import { docs, collections, formatPrice, toDate } from "@/lib/firebase-helpers";
 import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import type { User, Order } from "@/types";
+import Image from "next/image";
 
 export default function AdminCustomerDetailPage() {
   const params = useParams();
@@ -113,7 +114,7 @@ export default function AdminCustomerDetailPage() {
   if (!customer) {
     return (
       <div className="text-center py-16">
-        <span className="text-4xl mb-4 block">🐝</span>
+        <Image src="/logo.svg" alt="Lucky Bee Press" width={64} height={64} />
         <h1 className="text-2xl font-bold mb-2">Customer Not Found</h1>
         <Button onClick={() => router.push("/admin/customers")}>
           Back to Customers
