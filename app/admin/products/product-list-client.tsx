@@ -44,7 +44,15 @@ export function ProductListClient({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchAction, setBatchAction] = useState("set_available");
   const [batchCategoryId, setBatchCategoryId] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [batchError, setBatchError] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const filteredProducts = filterCategory
+    ? filterCategory === "__uncategorized"
+      ? products.filter((p) => !p.categoryId)
+      : products.filter((p) => p.categoryId === filterCategory)
+    : products;
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -56,22 +64,34 @@ export function ProductListClient({
   };
 
   const toggleAll = () => {
-    if (selected.size === products.length) {
+    if (selected.size === filteredProducts.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(products.map((p) => p.id)));
+      setSelected(new Set(filteredProducts.map((p) => p.id)));
     }
   };
 
   const handleBatchAction = () => {
     if (selected.size === 0) return;
+    setBatchError("");
+
+    if (batchAction === "change_category" && !batchCategoryId) {
+      setBatchError("Please select a category.");
+      return;
+    }
+
     startTransition(async () => {
-      await batchProductAction(
+      const result = await batchProductAction(
         Array.from(selected),
         batchAction,
         batchAction === "change_category" ? batchCategoryId : undefined,
       );
-      setSelected(new Set());
+      if (result.success) {
+        setSelected(new Set());
+        setBatchCategoryId("");
+      } else {
+        setBatchError(result.error ?? "Action failed.");
+      }
     });
   };
 
@@ -86,6 +106,31 @@ export function ProductListClient({
 
   return (
     <div>
+      {/* Category Filter */}
+      <div className="mb-4">
+        <select
+          value={filterCategory}
+          onChange={(e) => {
+            setFilterCategory(e.target.value);
+            setSelected(new Set());
+          }}
+          className="rounded-md border px-3 py-2 text-sm"
+        >
+          <option value="">All Categories ({products.length})</option>
+          {categories.map((c) => {
+            const count = products.filter((p) => p.categoryId === c.id).length;
+            return (
+              <option key={c.id} value={c.id}>
+                {c.name} ({count})
+              </option>
+            );
+          })}
+          <option value="__uncategorized">
+            Uncategorized ({products.filter((p) => !p.categoryId).length})
+          </option>
+        </select>
+      </div>
+
       {/* Batch Action Bar */}
       {selected.size > 0 && (
         <div className="mb-4 flex items-center gap-3 rounded-md border bg-muted/50 px-4 py-3">
@@ -122,11 +167,14 @@ export function ProductListClient({
             {isPending ? "Applying..." : "Apply"}
           </button>
           <button
-            onClick={() => setSelected(new Set())}
+            onClick={() => { setSelected(new Set()); setBatchError(""); }}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Clear
           </button>
+          {batchError && (
+            <span className="text-sm text-red-600">{batchError}</span>
+          )}
         </div>
       )}
 
@@ -138,7 +186,7 @@ export function ProductListClient({
               <th className="px-4 py-3 text-left">
                 <input
                   type="checkbox"
-                  checked={selected.size === products.length && products.length > 0}
+                  checked={selected.size === filteredProducts.length && filteredProducts.length > 0}
                   onChange={toggleAll}
                   className="rounded"
                 />
@@ -154,14 +202,14 @@ export function ProductListClient({
             </tr>
           </thead>
           <tbody>
-            {products.length === 0 ? (
+            {filteredProducts.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
                   No products found.
                 </td>
               </tr>
             ) : (
-              products.map((product) => (
+              filteredProducts.map((product) => (
                 <tr
                   key={product.id}
                   className="border-b hover:bg-muted/30 transition-colors"
