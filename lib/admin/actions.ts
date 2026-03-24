@@ -37,6 +37,13 @@ const createCustomerSchema = z.object({
   email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
   businessType: z.string().optional(),
+  ein: z.string().optional(),
+  resaleCertificateUrl: z.string().optional(),
+  street1: z.string().min(1, "Street address is required"),
+  street2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required").max(2),
+  zip: z.string().min(1, "ZIP is required"),
 });
 
 function generateTempPassword(): string {
@@ -60,6 +67,13 @@ export async function createCustomer(formData: FormData) {
       email: formData.get("email"),
       phone: formData.get("phone") || undefined,
       businessType: formData.get("businessType") || undefined,
+      ein: formData.get("ein") || undefined,
+      resaleCertificateUrl: formData.get("resaleCertificateUrl") || undefined,
+      street1: formData.get("street1"),
+      street2: formData.get("street2") || undefined,
+      city: formData.get("city"),
+      state: formData.get("state"),
+      zip: formData.get("zip"),
     });
 
     if (!parsed.success) {
@@ -82,7 +96,7 @@ export async function createCustomer(formData: FormData) {
     const { hash } = await import("bcryptjs");
     const passwordHash = await hash(tempPassword, 12);
 
-    await db.insert(users).values({
+    const [newUser] = await db.insert(users).values({
       email: data.email,
       passwordHash,
       name: data.ownerName,
@@ -90,8 +104,22 @@ export async function createCustomer(formData: FormData) {
       ownerName: data.ownerName,
       phone: data.phone ?? null,
       businessType: data.businessType ?? null,
+      ein: data.ein ?? null,
+      resaleCertificateUrl: data.resaleCertificateUrl ?? null,
       status: "active",
       approvedAt: new Date(),
+    }).returning({ id: users.id });
+
+    await db.insert(addresses).values({
+      userId: newUser.id,
+      recipientName: data.ownerName,
+      street1: data.street1,
+      street2: data.street2 ?? null,
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
+      country: "US",
+      isDefault: true,
     });
 
     const { welcomeAccountEmail } = await import("@/lib/emails/templates");
