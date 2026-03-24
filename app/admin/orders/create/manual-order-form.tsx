@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createManualOrder } from "@/lib/admin/actions";
 
 function formatCents(cents: number): string {
@@ -24,6 +25,7 @@ type Product = {
   boxWholesalePrice: number | null;
   categoryName: string | null;
   isAvailable: boolean;
+  image: string | null;
 };
 
 type DraftItem = {
@@ -196,15 +198,26 @@ export function ManualOrderForm({
               {filteredProducts.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between px-3 py-2 text-sm border-b last:border-b-0"
+                  className="flex items-center gap-3 px-3 py-2 text-sm border-b last:border-b-0"
                 >
-                  <span>
-                    {p.name}
+                  {p.image ? (
+                    <Image
+                      src={p.image}
+                      alt={p.name}
+                      width={40}
+                      height={40}
+                      className="rounded object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="size-10 rounded bg-muted shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="block truncate font-medium">{p.name}</span>
                     {p.sku && (
-                      <span className="ml-2 text-muted-foreground">({p.sku})</span>
+                      <span className="text-xs text-muted-foreground">{p.sku}</span>
                     )}
-                  </span>
-                  <div className="flex items-center gap-2">
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => addProduct(p, false)}
                       className="rounded px-2 py-1 text-xs font-medium bg-primary/10 text-primary-text hover:bg-primary/20"

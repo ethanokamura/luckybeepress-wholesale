@@ -26,6 +26,7 @@ export default async function CreateOrderPage() {
           boxWholesalePrice: p.boxWholesalePrice,
           categoryName: p.categoryName,
           isAvailable: p.isAvailable,
+          image: (p.images as string[] | null)?.[0] ?? null,
         }))}
       />
     </div>

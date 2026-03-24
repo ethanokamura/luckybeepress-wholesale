@@ -1101,14 +1101,16 @@ export async function batchProductAction(
     }
 
     switch (action) {
-      case "enable": {
+      case "enable":
+      case "set_available": {
         await db
           .update(products)
           .set({ isAvailable: true, updatedAt: new Date() })
           .where(inArray(products.id, ids));
         break;
       }
-      case "disable": {
+      case "disable":
+      case "set_unavailable": {
         await db
           .update(products)
           .set({ isAvailable: false, updatedAt: new Date() })
