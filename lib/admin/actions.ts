@@ -20,6 +20,9 @@ import { stripe } from "@/lib/stripe";
 import { sendNewOrderNotification } from "@/lib/admin/emails";
 import { generateOrderNumber } from "@/lib/utils/order-number";
 
+// TODO: Route admin-triggered emails to owner for review; switch to customer email when ready
+const ADMIN_REVIEW_EMAIL = "luckybeepress@gmail.com";
+
 // ─── Helpers ──────────────────────────────────────────────────
 
 function generateSlug(name: string): string {
@@ -89,26 +92,32 @@ export async function createCustomer(formData: FormData) {
       .limit(1);
 
     if (existing.length > 0) {
-      return { success: false, error: "A customer with this email already exists" };
+      return {
+        success: false,
+        error: "A customer with this email already exists",
+      };
     }
 
     const tempPassword = generateTempPassword();
     const { hash } = await import("bcryptjs");
     const passwordHash = await hash(tempPassword, 12);
 
-    const [newUser] = await db.insert(users).values({
-      email: data.email,
-      passwordHash,
-      name: data.ownerName,
-      businessName: data.businessName,
-      ownerName: data.ownerName,
-      phone: data.phone ?? null,
-      businessType: data.businessType ?? null,
-      ein: data.ein ?? null,
-      resaleCertificateUrl: data.resaleCertificateUrl ?? null,
-      status: "active",
-      approvedAt: new Date(),
-    }).returning({ id: users.id });
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: data.email,
+        passwordHash,
+        name: data.ownerName,
+        businessName: data.businessName,
+        ownerName: data.ownerName,
+        phone: data.phone ?? null,
+        businessType: data.businessType ?? null,
+        ein: data.ein ?? null,
+        resaleCertificateUrl: data.resaleCertificateUrl ?? null,
+        status: "active",
+        approvedAt: new Date(),
+      })
+      .returning({ id: users.id });
 
     await db.insert(addresses).values({
       userId: newUser.id,
@@ -122,12 +131,13 @@ export async function createCustomer(formData: FormData) {
       isDefault: true,
     });
 
+    // TODO: Send to customer email once ready (currently routing to owner for review)
     const { welcomeAccountEmail } = await import("@/lib/emails/templates");
     const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://wholesale.luckybeepress.com"}/login`;
     await resend.emails.send({
       from: FROM_EMAIL,
-      to: data.email,
-      subject: "Your Lucky Bee Press Wholesale Account",
+      to: ADMIN_REVIEW_EMAIL,
+      subject: `[Review] Welcome Email for ${data.ownerName} (${data.email})`,
       html: welcomeAccountEmail({
         name: data.ownerName,
         tempPassword,
@@ -140,7 +150,8 @@ export async function createCustomer(formData: FormData) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create customer",
+      error:
+        error instanceof Error ? error.message : "Failed to create customer",
     };
   }
 }
@@ -190,7 +201,10 @@ export async function approveApplication(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to approve application",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to approve application",
     };
   }
 }
@@ -234,7 +248,8 @@ export async function rejectApplication(id: string, note?: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to reject application",
+      error:
+        error instanceof Error ? error.message : "Failed to reject application",
     };
   }
 }
@@ -298,7 +313,8 @@ export async function toggleTaxExempt(customerId: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle tax exempt",
+      error:
+        error instanceof Error ? error.message : "Failed to toggle tax exempt",
     };
   }
 }
@@ -373,7 +389,11 @@ export async function sendReengagementEmail(customerId: string) {
     await requireAdmin();
 
     const [customer] = await db
-      .select({ email: users.email, ownerName: users.ownerName, businessName: users.businessName })
+      .select({
+        email: users.email,
+        ownerName: users.ownerName,
+        businessName: users.businessName,
+      })
       .from(users)
       .where(eq(users.id, customerId))
       .limit(1);
@@ -414,7 +434,13 @@ export async function batchUpdateOrderStatus(
       return { success: false, error: "No orders selected" };
     }
 
-    const validStatuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+    const validStatuses = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
     if (!validStatuses.includes(status)) {
       return { success: false, error: "Invalid status" };
     }
@@ -429,7 +455,12 @@ export async function batchUpdateOrderStatus(
     }
 
     const updateData: Record<string, unknown> = {
-      status: status as "pending" | "confirmed" | "shipped" | "delivered" | "cancelled",
+      status: status as
+        | "pending"
+        | "confirmed"
+        | "shipped"
+        | "delivered"
+        | "cancelled",
       updatedAt: new Date(),
     };
 
@@ -437,10 +468,7 @@ export async function batchUpdateOrderStatus(
       updateData.cancelledAt = new Date();
     }
 
-    await db
-      .update(orders)
-      .set(updateData)
-      .where(inArray(orders.id, orderIds));
+    await db.update(orders).set(updateData).where(inArray(orders.id, orderIds));
 
     // Send notification emails for shipped or cancelled
     if (status === "shipped" || status === "cancelled") {
@@ -486,7 +514,10 @@ ${order.trackingNumber ? `<p>Tracking number: <strong>${order.trackingNumber}</s
   }
 }
 
-export async function setTrackingNumber(orderId: string, trackingNumber: string) {
+export async function setTrackingNumber(
+  orderId: string,
+  trackingNumber: string,
+) {
   try {
     await requireAdmin();
 
@@ -531,7 +562,10 @@ export async function setTrackingNumber(orderId: string, trackingNumber: string)
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to set tracking number",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to set tracking number",
     };
   }
 }
@@ -562,7 +596,8 @@ export async function markDelivered(orderId: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to mark delivered",
+      error:
+        error instanceof Error ? error.message : "Failed to mark delivered",
     };
   }
 }
@@ -715,8 +750,7 @@ export async function cancelOrder(orderId: string, reason: string) {
       .update(orders)
       .set({
         status: "cancelled",
-        paymentStatus:
-          order.paymentStatus === "paid" ? "refunded" : "voided",
+        paymentStatus: order.paymentStatus === "paid" ? "refunded" : "voided",
         cancelledAt: new Date(),
         cancelReason: reason,
         updatedAt: new Date(),
@@ -823,7 +857,8 @@ export async function createProduct(formData: FormData) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create product",
+      error:
+        error instanceof Error ? error.message : "Failed to create product",
     };
   }
 }
@@ -886,7 +921,8 @@ export async function updateProduct(id: string, formData: FormData) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update product",
+      error:
+        error instanceof Error ? error.message : "Failed to update product",
     };
   }
 }
@@ -913,7 +949,10 @@ export async function toggleAvailability(id: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle availability",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle availability",
     };
   }
 }
@@ -940,7 +979,8 @@ export async function toggleBestSeller(id: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle best seller",
+      error:
+        error instanceof Error ? error.message : "Failed to toggle best seller",
     };
   }
 }
@@ -967,7 +1007,8 @@ export async function toggleNewArrival(id: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle new arrival",
+      error:
+        error instanceof Error ? error.message : "Failed to toggle new arrival",
     };
   }
 }
@@ -1017,7 +1058,8 @@ export async function toggleFeatured(id: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle featured",
+      error:
+        error instanceof Error ? error.message : "Failed to toggle featured",
     };
   }
 }
@@ -1040,7 +1082,8 @@ export async function saveSortOrder(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to save sort order",
+      error:
+        error instanceof Error ? error.message : "Failed to save sort order",
     };
   }
 }
@@ -1095,7 +1138,10 @@ export async function batchProductAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to perform batch action",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to perform batch action",
     };
   }
 }
@@ -1123,7 +1169,10 @@ export async function createCategory(
       .limit(1);
 
     if (existing) {
-      return { success: false, error: "A category with this name already exists" };
+      return {
+        success: false,
+        error: "A category with this name already exists",
+      };
     }
 
     // Get max sort order
@@ -1146,7 +1195,8 @@ export async function createCategory(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create category",
+      error:
+        error instanceof Error ? error.message : "Failed to create category",
     };
   }
 }
@@ -1169,7 +1219,10 @@ export async function renameCategory(id: string, name: string) {
       .limit(1);
 
     if (existing) {
-      return { success: false, error: "A category with this name already exists" };
+      return {
+        success: false,
+        error: "A category with this name already exists",
+      };
     }
 
     const [category] = await db
@@ -1185,7 +1238,8 @@ export async function renameCategory(id: string, name: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to rename category",
+      error:
+        error instanceof Error ? error.message : "Failed to rename category",
     };
   }
 }
@@ -1208,7 +1262,8 @@ export async function reorderCategories(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to reorder categories",
+      error:
+        error instanceof Error ? error.message : "Failed to reorder categories",
     };
   }
 }
@@ -1242,7 +1297,8 @@ export async function deleteCategory(id: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete category",
+      error:
+        error instanceof Error ? error.message : "Failed to delete category",
     };
   }
 }
@@ -1276,7 +1332,8 @@ export async function reassignProducts(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to reassign products",
+      error:
+        error instanceof Error ? error.message : "Failed to reassign products",
     };
   }
 }
@@ -1340,7 +1397,8 @@ export async function markInvoicePaid(invoiceId: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to mark invoice paid",
+      error:
+        error instanceof Error ? error.message : "Failed to mark invoice paid",
     };
   }
 }
@@ -1402,7 +1460,8 @@ export async function creditInvoice(invoiceId: string, amount: number) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to credit invoice",
+      error:
+        error instanceof Error ? error.message : "Failed to credit invoice",
     };
   }
 }
@@ -1437,7 +1496,8 @@ export async function updateSettings(settings: Record<string, string>) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update settings",
+      error:
+        error instanceof Error ? error.message : "Failed to update settings",
     };
   }
 }
@@ -1495,7 +1555,10 @@ export async function createManualOrder(data: {
     for (const item of data.items) {
       const product = productMap.get(item.productId);
       if (!product) {
-        return { success: false, error: `Product not found: ${item.productId}` };
+        return {
+          success: false,
+          error: `Product not found: ${item.productId}`,
+        };
       }
 
       const isBox = item.lineItemType === "box_set";
@@ -1542,7 +1605,8 @@ export async function createManualOrder(data: {
           country: address.country,
         }
       : {
-          recipientName: customer.ownerName ?? customer.businessName ?? "Unknown",
+          recipientName:
+            customer.ownerName ?? customer.businessName ?? "Unknown",
           street1: "TBD",
           city: "TBD",
           state: "TBD",
@@ -1579,22 +1643,47 @@ export async function createManualOrder(data: {
       })),
     );
 
-    // Send confirmation email
+    // TODO: Send to customer email once ready (currently routing to owner for review)
+    const { generateInvoicePdf } =
+      await import("@/lib/utils/generate-invoice-pdf");
+    const { orderConfirmationEmail } = await import("@/lib/emails/templates");
+
+    let attachments: { filename: string; content: Buffer }[] | undefined;
+    try {
+      const { buffer } = await generateInvoicePdf(order.id);
+      attachments = [
+        { filename: `Invoice-${orderNumber}.pdf`, content: buffer },
+      ];
+    } catch {
+      // If PDF generation fails, still send the email without the attachment
+    }
+
+    const addrString = `${shippingSnapshot.recipientName}, ${shippingSnapshot.street1}${shippingSnapshot.street2 ? `, ${shippingSnapshot.street2}` : ""}, ${shippingSnapshot.city}, ${shippingSnapshot.state} ${shippingSnapshot.zip}`;
     await resend.emails.send({
       from: FROM_EMAIL,
-      to: customer.email,
-      subject: `Order Confirmation - ${orderNumber}`,
-      html: `<p>Hi ${customer.ownerName},</p>
-<p>An order has been placed on your behalf by Lucky Bee Press.</p>
-<p><strong>Order Number:</strong> ${orderNumber}</p>
-<p><strong>Total:</strong> $${(total / 100).toFixed(2)}</p>
-<p>You can view the details in your account.</p>
-<p>Thank you!</p>`,
+      to: ADMIN_REVIEW_EMAIL,
+      subject: `[Review] Order Confirmation for ${customer.ownerName ?? customer.businessName} - ${orderNumber}`,
+      html: orderConfirmationEmail({
+        name: customer.ownerName ?? "there",
+        orderNumber,
+        items: itemsToInsert,
+        subtotal,
+        shippingCost,
+        discountAmount,
+        total,
+        shippingAddress: addrString,
+      }),
+      attachments,
     });
 
-    // Send admin notification
     await sendNewOrderNotification(
-      { id: order.id, orderNumber, total, paymentMethod: data.paymentMethod, items: itemsToInsert },
+      {
+        id: order.id,
+        orderNumber,
+        total,
+        paymentMethod: data.paymentMethod,
+        items: itemsToInsert,
+      },
       { businessName: customer.businessName, ownerName: customer.ownerName },
     );
 

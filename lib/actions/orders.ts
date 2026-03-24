@@ -308,11 +308,21 @@ export async function placeOrderAction(
 async function sendOrderConfirmationEmail(
   email: string,
   name: string,
-  order: { orderNumber: string; total: number; subtotal: number; shippingCost: number; discountAmount: number },
+  order: { id: string; orderNumber: string; total: number; subtotal: number; shippingCost: number; discountAmount: number },
   items: { productName: string; quantity: number; unitPrice: number; lineTotal: number }[],
   shippingAddress: string
 ) {
   const { orderConfirmationEmail } = await import("@/lib/emails/templates");
+  const { generateInvoicePdf } = await import("@/lib/utils/generate-invoice-pdf");
+
+  let attachments: { filename: string; content: Buffer }[] | undefined;
+  try {
+    const { buffer, orderNumber } = await generateInvoicePdf(order.id);
+    attachments = [{ filename: `Invoice-${orderNumber}.pdf`, content: buffer }];
+  } catch {
+    // If PDF generation fails, still send the email without the attachment
+  }
+
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
@@ -327,6 +337,7 @@ async function sendOrderConfirmationEmail(
       total: order.total,
       shippingAddress,
     }),
+    attachments,
   });
 }
 
