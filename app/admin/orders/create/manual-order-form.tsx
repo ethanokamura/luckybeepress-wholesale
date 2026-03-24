@@ -115,10 +115,6 @@ export function ManualOrderForm({
   const shippingCost = 1500;
   const total = subtotal - discountAmount + shippingCost;
 
-  // Rough minimum check (can be adjusted)
-  const MINIMUM_ORDER = 15000; // $150 in cents
-  const isBelowMinimum = subtotal < MINIMUM_ORDER;
-
   const handleSubmit = () => {
     if (!selectedCustomerId) {
       setError("Please select a customer.");
@@ -126,10 +122,6 @@ export function ManualOrderForm({
     }
     if (items.length === 0) {
       setError("Please add at least one product.");
-      return;
-    }
-    if (isBelowMinimum && !overrideReason.trim()) {
-      setError("Order is below minimum. Provide an override reason.");
       return;
     }
     setError("");
@@ -144,7 +136,7 @@ export function ManualOrderForm({
         })),
         paymentMethod,
         notes: notes || undefined,
-        overrideReason: isBelowMinimum ? overrideReason : undefined,
+        overrideReason: overrideReason.trim() || undefined,
       });
       if (result.success) {
         router.push("/admin/orders");
@@ -351,20 +343,18 @@ export function ManualOrderForm({
       </div>
 
       {/* Override Reason */}
-      {isBelowMinimum && (
-        <div>
-          <label className="block text-sm font-medium mb-1 text-orange-700">
-            Below Minimum Order ({formatCents(MINIMUM_ORDER)}) - Override Reason Required
-          </label>
-          <input
-            type="text"
-            value={overrideReason}
-            onChange={(e) => setOverrideReason(e.target.value)}
-            placeholder="Reason for below-minimum order..."
-            className="w-full rounded-md border border-orange-300 px-3 py-2 text-sm"
-          />
-        </div>
-      )}
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Override Reason (optional)
+        </label>
+        <input
+          type="text"
+          value={overrideReason}
+          onChange={(e) => setOverrideReason(e.target.value)}
+          placeholder="e.g. sample order, trade show, etc."
+          className="w-full rounded-md border px-3 py-2 text-sm"
+        />
+      </div>
 
       {/* Submit */}
       <button
