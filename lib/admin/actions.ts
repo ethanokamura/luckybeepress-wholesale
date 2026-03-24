@@ -29,6 +29,94 @@ function generateSlug(name: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+// ─── Create Customer ─────────────────────────────────────────
+
+const createCustomerSchema = z.object({
+  businessName: z.string().min(1, "Business name is required"),
+  ownerName: z.string().min(1, "Owner name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().optional(),
+  businessType: z.string().optional(),
+});
+
+function generateTempPassword(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let password = "";
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  for (const byte of bytes) {
+    password += chars[byte % chars.length];
+  }
+  return password;
+}
+
+export async function createCustomer(formData: FormData) {
+  try {
+    await requireAdmin();
+
+    const parsed = createCustomerSchema.safeParse({
+      businessName: formData.get("businessName"),
+      ownerName: formData.get("ownerName"),
+      email: formData.get("email"),
+      phone: formData.get("phone") || undefined,
+      businessType: formData.get("businessType") || undefined,
+    });
+
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const data = parsed.data;
+
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, data.email))
+      .limit(1);
+
+    if (existing.length > 0) {
+      return { success: false, error: "A customer with this email already exists" };
+    }
+
+    const tempPassword = generateTempPassword();
+    const { hash } = await import("bcryptjs");
+    const passwordHash = await hash(tempPassword, 12);
+
+    await db.insert(users).values({
+      email: data.email,
+      passwordHash,
+      name: data.ownerName,
+      businessName: data.businessName,
+      ownerName: data.ownerName,
+      phone: data.phone ?? null,
+      businessType: data.businessType ?? null,
+      status: "active",
+      approvedAt: new Date(),
+    });
+
+    const { welcomeAccountEmail } = await import("@/lib/emails/templates");
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://wholesale.luckybeepress.com"}/login`;
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.email,
+      subject: "Your Lucky Bee Press Wholesale Account",
+      html: welcomeAccountEmail({
+        name: data.ownerName,
+        tempPassword,
+        loginUrl,
+      }),
+    });
+
+    revalidatePath("/admin/customers");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create customer",
+    };
+  }
+}
+
 // ─── Application Actions ─────────────────────────────────────
 
 export async function approveApplication(

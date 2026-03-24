@@ -158,6 +158,29 @@ export function refundIssuedEmail(params: {
   `);
 }
 
+export function welcomeAccountEmail(params: {
+  name: string;
+  tempPassword: string;
+  loginUrl: string;
+}): string {
+  return wrap(`
+    <p>Hi ${params.name},</p>
+    <p>A wholesale account has been created for you at Lucky Bee Press.</p>
+    <p>Here are your login details:</p>
+    <div style="background: #FFF9ED; border-radius: 8px; padding: 16px; margin: 16px 0;">
+      <p style="margin: 0 0 8px;"><strong>Temporary password:</strong></p>
+      <p style="margin: 0; font-family: monospace; font-size: 16px; letter-spacing: 1px;">${params.tempPassword}</p>
+    </div>
+    <p>Please sign in and change your password as soon as possible.</p>
+    <p style="margin: 24px 0;">
+      <a href="${params.loginUrl}" style="display: inline-block; background: #FFC72C; color: #1A1815; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+        Sign In
+      </a>
+    </p>
+    <p>Welcome to the Lucky Bee Press family!</p>
+  `);
+}
+
 export function reorderWindowEmail(params: {
   name: string;
   lastOrderDate: string;

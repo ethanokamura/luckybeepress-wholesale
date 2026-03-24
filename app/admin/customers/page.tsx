@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCustomerList } from "@/lib/admin/queries";
+import { CreateCustomerForm } from "./create-customer-form";
 
 export default async function CustomersPage({
   searchParams,
@@ -31,12 +32,15 @@ export default async function CustomersPage({
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Customers</h1>
-        <Link
-          href="/admin"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          Back to Dashboard
-        </Link>
+        <div className="flex items-center gap-3">
+          <CreateCustomerForm />
+          <Link
+            href="/admin"
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
