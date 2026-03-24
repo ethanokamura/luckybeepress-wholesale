@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { registerAction, uploadResaleCertificate } from "@/lib/actions/account";
+import { registerAction, generateCertificateUploadUrl } from "@/lib/actions/account";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,16 +30,39 @@ export default function ApplyForm() {
     setUploading(true);
     setUploadError(null);
 
-    const fd = new FormData();
-    fd.set("file", file);
-    const result = await uploadResaleCertificate(fd);
+    try {
+      const result = await generateCertificateUploadUrl(
+        file.name,
+        file.type,
+        file.size,
+      );
 
-    if ("error" in result) {
-      setUploadError(result.error!);
-    } else {
-      setCertificateUrl(result.url!);
+      if ("error" in result) {
+        setUploadError(result.error!);
+        setUploading(false);
+        return;
+      }
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", result.uploadUrl!);
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setCertificateUrl(result.publicUrl!);
+        } else {
+          setUploadError("Upload failed, please try again");
+        }
+        setUploading(false);
+      };
+      xhr.onerror = () => {
+        setUploadError("Upload failed, please try again");
+        setUploading(false);
+      };
+      xhr.send(file);
+    } catch {
+      setUploadError("Upload failed, please try again");
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   return (

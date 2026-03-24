@@ -56,9 +56,7 @@ function NavSection({
     <>
       {items.map(({ href, label, icon: Icon }) => {
         const isActive =
-          href === "/admin"
-            ? pathname === "/admin"
-            : pathname.startsWith(href);
+          href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
         return (
           <Link
             key={href}
@@ -86,7 +84,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
     <aside className="w-64 border-r bg-muted/30 p-4 flex flex-col gap-1">
       <div className="mb-6 px-3">
         <div className="flex items-center gap-2">
-          <Image src="/logo.svg" alt="Lucky Bee Press" width={28} height={28} />
+          {/* <Image src="/logo.svg" alt="Lucky Bee Press" width={28} height={28} /> */}
           <h2 className="text-lg font-semibold">Lucky Bee Press</h2>
         </div>
         <p className="text-sm text-muted-foreground">Admin Dashboard</p>

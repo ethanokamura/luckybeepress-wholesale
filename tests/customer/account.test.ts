@@ -34,8 +34,9 @@ function mockDelete(data: unknown = []) {
 
 // ─── Additional mocks ───────────────────────────────────────────
 
-vi.mock("@vercel/blob", () => ({
-  put: vi.fn().mockResolvedValue({ url: "https://blob.example.com/file.pdf" }),
+vi.mock("@/lib/r2", () => ({
+  getPresignedUploadUrl: vi.fn().mockResolvedValue("https://r2.example.com/presigned-url"),
+  getPublicUrl: vi.fn().mockReturnValue("https://r2.example.com/resale-certificates/test.pdf"),
 }));
 
 vi.mock("bcryptjs", () => ({
@@ -58,7 +59,7 @@ vi.mock("@/lib/emails/templates", () => ({
 import { getCurrentUser } from "@/lib/auth";
 import { resend } from "@/lib/email";
 import { revalidatePath } from "next/cache";
-import { put } from "@vercel/blob";
+import { getPresignedUploadUrl, getPublicUrl } from "@/lib/r2";
 import { hash, compare } from "bcryptjs";
 import {
   applicationFormSchema,
@@ -69,7 +70,7 @@ import {
 // ─── SUT ────────────────────────────────────────────────────────
 
 import {
-  uploadResaleCertificate,
+  generateCertificateUploadUrl,
   registerAction,
   updateProfileAction,
   addAddressAction,
@@ -125,45 +126,32 @@ beforeEach(() => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// uploadResaleCertificate
+// generateCertificateUploadUrl
 // ═══════════════════════════════════════════════════════════════
 
-describe("uploadResaleCertificate", () => {
-  it("returns error when no file provided", async () => {
-    const fd = new FormData();
-    const result = await uploadResaleCertificate(fd);
-    expect(result).toEqual({ error: "No file provided" });
-  });
-
+describe("generateCertificateUploadUrl", () => {
   it("returns error for invalid file type", async () => {
-    const fd = new FormData();
-    const file = new File(["data"], "test.txt", { type: "text/plain" });
-    fd.set("file", file);
-    const result = await uploadResaleCertificate(fd);
+    const result = await generateCertificateUploadUrl("test.txt", "text/plain", 1024);
     expect(result).toEqual({ error: "File must be a PDF, JPEG, PNG, or WebP" });
   });
 
   it("returns error when file is too large", async () => {
-    const fd = new FormData();
-    const bigContent = new Uint8Array(11 * 1024 * 1024); // 11MB
-    const file = new File([bigContent], "big.pdf", { type: "application/pdf" });
-    fd.set("file", file);
-    const result = await uploadResaleCertificate(fd);
+    const result = await generateCertificateUploadUrl("big.pdf", "application/pdf", 11 * 1024 * 1024);
     expect(result).toEqual({ error: "File must be under 10MB" });
   });
 
-  it("uploads valid file and returns URL", async () => {
-    const fd = new FormData();
-    const file = new File(["pdf-content"], "cert.pdf", { type: "application/pdf" });
-    fd.set("file", file);
-    const result = await uploadResaleCertificate(fd);
+  it("returns presigned upload URL and public URL for valid file", async () => {
+    const result = await generateCertificateUploadUrl("cert.pdf", "application/pdf", 1024);
 
-    expect(put).toHaveBeenCalledWith(
+    expect(getPresignedUploadUrl).toHaveBeenCalledWith(
       expect.stringContaining("resale-certificates/"),
-      file,
-      { access: "public" },
+      "application/pdf",
     );
-    expect(result).toEqual({ url: "https://blob.example.com/file.pdf" });
+    expect(result).toEqual({
+      uploadUrl: "https://r2.example.com/presigned-url",
+      key: expect.stringContaining("resale-certificates/"),
+      publicUrl: "https://r2.example.com/resale-certificates/test.pdf",
+    });
   });
 });
 

@@ -5,48 +5,39 @@ import { users, addresses } from "@/lib/db/schema";
 import { applicationFormSchema, updateProfileSchema, addressFormSchema } from "@/lib/db/validators";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
-import { put } from "@vercel/blob";
+import { getPresignedUploadUrl, getPublicUrl } from "@/lib/r2";
 import { resend, FROM_EMAIL } from "@/lib/email";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 // ─── 3.2 Resale Certificate Upload ──────────────────────────
 
-export async function uploadResaleCertificate(formData: FormData) {
-  const file = formData.get("file") as File | null;
-  if (!file) return { error: "No file provided" };
+const ALLOWED_CERT_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+const MAX_CERT_SIZE = 10 * 1024 * 1024; // 10MB
 
-  try {
-    const { headers } = await import("next/headers");
-    const origin = (await headers()).get("origin");
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-    if (origin && appUrl && !appUrl.startsWith(origin)) {
-      return { error: "Unauthorized" };
-    }
-  } catch {
-    // headers() unavailable outside request context
-  }
-
-  const allowedTypes = [
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-  ];
-  if (!allowedTypes.includes(file.type)) {
+export async function generateCertificateUploadUrl(
+  fileName: string,
+  contentType: string,
+  fileSize: number,
+) {
+  if (!ALLOWED_CERT_TYPES.includes(contentType)) {
     return { error: "File must be a PDF, JPEG, PNG, or WebP" };
   }
 
-  const maxSize = 10 * 1024 * 1024; // 10MB
-  if (file.size > maxSize) {
+  if (fileSize > MAX_CERT_SIZE) {
     return { error: "File must be under 10MB" };
   }
 
-  const blob = await put(`resale-certificates/${Date.now()}-${file.name}`, file, {
-    access: "public",
-  });
-
-  return { url: blob.url };
+  const extension = fileName.split(".").pop() ?? "bin";
+  const key = `resale-certificates/${crypto.randomUUID()}.${extension}`;
+  const uploadUrl = await getPresignedUploadUrl(key, contentType);
+  const publicUrl = getPublicUrl(key);
+  return { uploadUrl, key, publicUrl };
 }
 
 // ─── 3.3 Registration / Application ─────────────────────────

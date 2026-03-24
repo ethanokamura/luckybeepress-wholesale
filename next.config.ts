@@ -7,10 +7,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.faire.com",
       },
-      {
-        protocol: "https",
-        hostname: "*.public.blob.vercel-storage.com",
-      },
+      ...(process.env.CLOUDFLARE_R2_PUBLIC_URL
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: new URL(process.env.CLOUDFLARE_R2_PUBLIC_URL).hostname,
+            },
+          ]
+        : []),
     ],
   },
   async headers() {
