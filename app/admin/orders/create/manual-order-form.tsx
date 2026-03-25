@@ -55,7 +55,9 @@ export function ManualOrderForm({
   const [error, setError] = useState("");
 
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
-  const discountPercent = parseFloat(selectedCustomer?.customDiscountPercent ?? "0");
+  const discountPercent = parseFloat(
+    selectedCustomer?.customDiscountPercent ?? "0",
+  );
 
   const filteredProducts = useMemo(() => {
     if (!productSearch.trim()) return [];
@@ -72,7 +74,7 @@ export function ManualOrderForm({
   }, [productSearch, products]);
 
   const addProduct = (product: Product, asBoxSet: boolean = false) => {
-    const lineItemType = asBoxSet ? "box_set" as const : "single" as const;
+    const lineItemType = asBoxSet ? ("box_set" as const) : ("single" as const);
     const unitPrice = asBoxSet
       ? (product.boxWholesalePrice ?? product.wholesalePrice)
       : product.wholesalePrice;
@@ -104,12 +106,25 @@ export function ManualOrderForm({
     setProductSearch("");
   };
 
-  const updateQuantity = (productId: string, lineItemType: string, quantity: number) => {
+  const updateQuantity = (
+    productId: string,
+    lineItemType: string,
+    quantity: number,
+  ) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => !(i.productId === productId && i.lineItemType === lineItemType)));
+      setItems((prev) =>
+        prev.filter(
+          (i) =>
+            !(i.productId === productId && i.lineItemType === lineItemType),
+        ),
+      );
     } else {
       setItems((prev) =>
-        prev.map((i) => (i.productId === productId && i.lineItemType === lineItemType ? { ...i, quantity } : i)),
+        prev.map((i) =>
+          i.productId === productId && i.lineItemType === lineItemType
+            ? { ...i, quantity }
+            : i,
+        ),
       );
     }
   };
@@ -216,7 +231,9 @@ export function ManualOrderForm({
                   <div className="flex-1 min-w-0">
                     <span className="block truncate font-medium">{p.name}</span>
                     {p.sku && (
-                      <span className="text-xs text-muted-foreground">{p.sku}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {p.sku}
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -248,7 +265,7 @@ export function ManualOrderForm({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-2 text-left font-medium w-12"></th>
+                <th className="px-4 py-2 text-left font-medium w-20"></th>
                 <th className="px-4 py-2 text-left font-medium">Product</th>
                 <th className="px-4 py-2 text-right font-medium">Price</th>
                 <th className="px-4 py-2 text-center font-medium">Qty</th>
@@ -258,7 +275,10 @@ export function ManualOrderForm({
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={`${item.productId}-${item.lineItemType}`} className="border-b last:border-0">
+                <tr
+                  key={`${item.productId}-${item.lineItemType}`}
+                  className="border-b last:border-0"
+                >
                   <td className="px-4 py-2">
                     {item.image ? (
                       <Image
@@ -266,7 +286,7 @@ export function ManualOrderForm({
                         alt={item.name}
                         width={40}
                         height={40}
-                        className="rounded object-cover"
+                        className="rounded object-cover  shrink-0"
                       />
                     ) : (
                       <div className="size-10 rounded bg-muted" />
@@ -274,11 +294,13 @@ export function ManualOrderForm({
                   </td>
                   <td className="px-4 py-2">
                     {item.name}
-                    <span className={`ml-2 inline-flex rounded-full px-1.5 py-0.5 text-xs font-medium ${
-                      item.lineItemType === "box_set"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-gray-100 text-gray-600"
-                    }`}>
+                    <span
+                      className={`ml-2 inline-flex rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                        item.lineItemType === "box_set"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       {item.lineItemType === "box_set" ? "Box Set" : "Singles"}
                     </span>
                   </td>
@@ -295,7 +317,11 @@ export function ManualOrderForm({
                       step={item.lineItemType === "box_set" ? 4 : 6}
                       value={item.quantity}
                       onChange={(e) =>
-                        updateQuantity(item.productId, item.lineItemType, parseInt(e.target.value, 10) || 0)
+                        updateQuantity(
+                          item.productId,
+                          item.lineItemType,
+                          parseInt(e.target.value, 10) || 0,
+                        )
                       }
                       className="w-20 rounded-md border px-2 py-1 text-center text-sm"
                     />
@@ -310,7 +336,9 @@ export function ManualOrderForm({
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button
-                      onClick={() => updateQuantity(item.productId, item.lineItemType, 0)}
+                      onClick={() =>
+                        updateQuantity(item.productId, item.lineItemType, 0)
+                      }
                       className="text-red-600 hover:text-red-800 text-xs"
                     >
                       Remove
@@ -331,8 +359,12 @@ export function ManualOrderForm({
         </div>
         {discountAmount > 0 && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Discount ({discountPercent}%)</span>
-            <span className="font-mono text-red-600">-{formatCents(discountAmount)}</span>
+            <span className="text-muted-foreground">
+              Discount ({discountPercent}%)
+            </span>
+            <span className="font-mono text-red-600">
+              -{formatCents(discountAmount)}
+            </span>
           </div>
         )}
         <div className="flex justify-between">
@@ -362,7 +394,9 @@ export function ManualOrderForm({
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+        <label className="block text-sm font-medium mb-1">
+          Notes (optional)
+        </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
