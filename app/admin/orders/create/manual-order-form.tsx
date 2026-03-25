@@ -78,8 +78,6 @@ export function ManualOrderForm({
     const unitPrice = asBoxSet
       ? (product.boxWholesalePrice ?? product.wholesalePrice)
       : product.wholesalePrice;
-    const itemKey = `${product.id}-${lineItemType}`;
-
     setItems((prev) => {
       const existing = prev.find(
         (i) => i.productId === product.id && i.lineItemType === lineItemType,

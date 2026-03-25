@@ -256,6 +256,85 @@ export async function rejectApplication(id: string, note?: string) {
 
 // ─── Customer Actions ─────────────────────────────────────────
 
+export async function updateCustomerProfile(
+  customerId: string,
+  data: {
+    businessName?: string;
+    ownerName?: string;
+    email?: string;
+    phone?: string;
+    businessType?: string;
+    ein?: string;
+  },
+) {
+  try {
+    await requireAdmin();
+
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.businessName !== undefined) updates.businessName = data.businessName;
+    if (data.ownerName !== undefined) {
+      updates.ownerName = data.ownerName;
+      updates.name = data.ownerName;
+    }
+    if (data.email !== undefined) {
+      const [existing] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.email, data.email), sql`${users.id} != ${customerId}`))
+        .limit(1);
+      if (existing) return { success: false, error: "Email already in use" };
+      updates.email = data.email;
+    }
+    if (data.phone !== undefined) updates.phone = data.phone || null;
+    if (data.businessType !== undefined) updates.businessType = data.businessType || null;
+    if (data.ein !== undefined) updates.ein = data.ein || null;
+
+    await db.update(users).set(updates).where(eq(users.id, customerId));
+
+    revalidatePath(`/admin/customers/${customerId}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update customer",
+    };
+  }
+}
+
+export async function updateCustomerAddress(
+  addressId: string,
+  customerId: string,
+  data: {
+    recipientName: string;
+    street1: string;
+    street2?: string;
+    city: string;
+    state: string;
+    zip: string;
+  },
+) {
+  try {
+    await requireAdmin();
+
+    await db
+      .update(addresses)
+      .set({
+        ...data,
+        street2: data.street2 ?? null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(addresses.id, addressId), eq(addresses.userId, customerId)));
+
+    revalidatePath(`/admin/customers/${customerId}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update address",
+    };
+  }
+}
+
 export async function toggleNet30(customerId: string) {
   try {
     await requireAdmin();

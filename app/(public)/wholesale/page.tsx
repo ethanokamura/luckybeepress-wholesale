@@ -95,7 +95,7 @@ export default function WholesalePage() {
                 Shipping
               </CardTitle>
               <CardDescription>
-                Flat rate shipping &middot; Ships within 3-5 business days
+                Flat rate shipping &middot; Ships within 5-7 business days
               </CardDescription>
             </CardHeader>
           </Card>

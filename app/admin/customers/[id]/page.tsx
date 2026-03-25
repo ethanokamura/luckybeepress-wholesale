@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCustomerDetail, isReturningCustomer } from "@/lib/admin/queries";
 import { CustomerActions } from "./customer-actions";
+import { EditCustomerForm } from "./edit-customer-form";
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
@@ -256,6 +257,31 @@ export default async function CustomerDetailPage({
             </tbody>
           </table>
         )}
+      </div>
+
+      {/* Edit Customer Info */}
+      <div className="mb-6">
+        <EditCustomerForm
+          customer={{
+            id: customer.id,
+            businessName: customer.businessName,
+            ownerName: customer.ownerName,
+            email: customer.email,
+            phone: customer.phone,
+            businessType: customer.businessType,
+            ein: customer.ein,
+          }}
+          addresses={customer.addresses.map((addr) => ({
+            id: addr.id,
+            recipientName: addr.recipientName,
+            street1: addr.street1,
+            street2: addr.street2,
+            city: addr.city,
+            state: addr.state,
+            zip: addr.zip,
+            isDefault: addr.isDefault,
+          }))}
+        />
       </div>
 
       {/* Actions & Internal Notes */}

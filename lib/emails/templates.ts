@@ -108,7 +108,7 @@ export function orderConfirmationEmail(params: {
       </tfoot>
     </table>
     <p><strong>Ship to:</strong><br/>${params.shippingAddress}</p>
-    <p>Estimated ship date: 3-5 business days.</p>
+    <p>Estimated ship time: 5-7 business days.</p>
   `);
 }
 
@@ -125,7 +125,7 @@ export function orderShippedEmail(params: {
         ${params.trackingNumber}
       </a>
     </p>
-    <p>Please allow 3-7 business days for delivery.</p>
+    <p>Please allow 5-7 business days for delivery.</p>
   `);
 }
 

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { getAdminOrderDetail } from "@/lib/admin/queries";
 import { OrderActions } from "./order-actions";
 
@@ -177,6 +178,7 @@ export default async function AdminOrderDetailPage({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
+                    <th className="pb-2 text-left font-medium w-12"></th>
                     <th className="pb-2 text-left font-medium">Product</th>
                     <th className="pb-2 text-left font-medium">Type</th>
                     <th className="pb-2 text-right font-medium">Qty</th>
@@ -187,6 +189,19 @@ export default async function AdminOrderDetailPage({
                 <tbody>
                   {order.items.map((item) => (
                     <tr key={item.id} className="border-b last:border-0">
+                      <td className="py-2">
+                        {(item.images as string[] | null)?.[0] ? (
+                          <Image
+                            src={(item.images as string[])[0]}
+                            alt={item.productName}
+                            width={40}
+                            height={40}
+                            className="rounded object-cover"
+                          />
+                        ) : (
+                          <div className="size-10 rounded bg-muted" />
+                        )}
+                      </td>
                       <td className="py-2">{item.productName}</td>
                       <td className="py-2 capitalize">
                         {item.lineItemType.replace("_", " ")}

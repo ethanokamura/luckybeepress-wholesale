@@ -482,8 +482,10 @@ export const getAdminOrderDetail = cache(async (id: string) => {
         quantity: orderItems.quantity,
         unitPrice: orderItems.unitPrice,
         lineTotal: orderItems.lineTotal,
+        images: products.images,
       })
       .from(orderItems)
+      .leftJoin(products, eq(orderItems.productId, products.id))
       .where(eq(orderItems.orderId, id)),
     db
       .select({
