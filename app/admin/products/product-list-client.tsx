@@ -45,14 +45,24 @@ export function ProductListClient({
   const [batchAction, setBatchAction] = useState("set_available");
   const [batchCategoryId, setBatchCategoryId] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [search, setSearch] = useState("");
   const [batchError, setBatchError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const filteredProducts = filterCategory
-    ? filterCategory === "__uncategorized"
-      ? products.filter((p) => !p.categoryId)
-      : products.filter((p) => p.categoryId === filterCategory)
-    : products;
+  const filteredProducts = products.filter((p) => {
+    if (filterCategory) {
+      if (filterCategory === "__uncategorized" ? p.categoryId : p.categoryId !== filterCategory) return false;
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      if (
+        !p.name.toLowerCase().includes(q) &&
+        !p.sku?.toLowerCase().includes(q) &&
+        !p.categoryName?.toLowerCase().includes(q)
+      ) return false;
+    }
+    return true;
+  });
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -106,8 +116,15 @@ export function ProductListClient({
 
   return (
     <div>
-      {/* Category Filter */}
-      <div className="mb-4">
+      {/* Search & Category Filter */}
+      <div className="mb-4 flex items-center gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setSelected(new Set()); }}
+          placeholder="Search by name, SKU, or category..."
+          className="flex-1 rounded-md border px-3 py-2 text-sm"
+        />
         <select
           value={filterCategory}
           onChange={(e) => {

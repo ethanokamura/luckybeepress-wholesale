@@ -34,6 +34,7 @@ type DraftItem = {
   lineItemType: "single" | "box_set";
   unitPrice: number;
   quantity: number;
+  image: string | null;
 };
 
 export function ManualOrderForm({
@@ -96,6 +97,7 @@ export function ManualOrderForm({
           lineItemType,
           unitPrice,
           quantity: asBoxSet ? 4 : 6,
+          image: product.image,
         },
       ];
     });
@@ -246,6 +248,7 @@ export function ManualOrderForm({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
+                <th className="px-4 py-2 text-left font-medium w-12"></th>
                 <th className="px-4 py-2 text-left font-medium">Product</th>
                 <th className="px-4 py-2 text-right font-medium">Price</th>
                 <th className="px-4 py-2 text-center font-medium">Qty</th>
@@ -256,6 +259,19 @@ export function ManualOrderForm({
             <tbody>
               {items.map((item) => (
                 <tr key={`${item.productId}-${item.lineItemType}`} className="border-b last:border-0">
+                  <td className="px-4 py-2">
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={40}
+                        height={40}
+                        className="rounded object-cover"
+                      />
+                    ) : (
+                      <div className="size-10 rounded bg-muted" />
+                    )}
+                  </td>
                   <td className="px-4 py-2">
                     {item.name}
                     <span className={`ml-2 inline-flex rounded-full px-1.5 py-0.5 text-xs font-medium ${
